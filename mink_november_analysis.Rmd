@@ -1,0 +1,178 @@
+---
+title: "Mink Analysis"
+output: html_notebook
+author: "Ann-Kathrin Pohle"
+---
+
+This document contains the code used for analysing the dataset "mink_november" which can be found here: https://doi.org/10.17617/3.SFXRZN 
+
+
+```{r}
+library(tidyverse)
+library(sjPlot)
+library(emmeans)
+```
+
+
+```{r}
+setwd("/Users/ankapohle/Desktop/minks on my desktop/data")
+
+mink <- read_delim("mink_november.csv",";", escape_double = FALSE, trim_ws = TRUE, locale=locale(decimal_mark = ","))
+
+#set working directory to endmond
+```
+
+
+```{r linear model volume}
+
+mink$Category <- factor(mink$Category, levels = c("wild", "farm", "feral")) 
+
+vol_cat <- lm(volcalc_cbl3 ~ sex*Category, data = mink)
+summary(vol_cat)
+emmeans(vol_cat, pairwise ~ sex*Category)
+plot(allEffects(vol_cat))
+
+###TABLE 1####
+tab_model(vol_cat, digits = 5)
+
+##to facilitate readibilty (increasing estimate values) we repeated this with measurements multiplied by 1000
+vol_cat2 <- lm(volcbl3_big ~ sex*Category, data = mink)
+summary(vol_cat2)
+em <- emmeans(vol_cat2, pairwise ~ sex*Category)
+plot(allEffects(vol_cat2))
+tab_model(vol_cat2, digits = 2, file = "vol_table2.doc")
+```
+
+
+```{r linear model braincase height}
+bh_cat <- lm(BH.CBL ~ sex*Category, data = minks_nov)
+summary(bh_cat)
+embh <- emmeans(bh_cat, pairwise ~ sex*Category)
+plot(allEffects(bh_cat))
+tab_model(bh_cat, digits = 4)#, file = "bh_table.doc")
+
+
+bh_cat2 <- lm(bhcbl_big ~ sex*Category, data = minks_nov)
+summary(bh_cat2)
+embh <- emmeans(bh_cat2, pairwise ~ sex*Category)
+plot(allEffects(bh_cat2))
+tab_model(bh_cat2, digits = 2)#, file = "bh_table2.doc")
+```
+
+
+```{r}
+bw_cat <- lm(BW.CBL ~ sex*Category, data = mink)
+summary(bw_cat)
+emmeans(bw_cat, pairwise ~ sex*Category)
+plot(allEffects(bw_cat))
+tab_model(bw_cat, digits = 3, file = "bw_table_category.doc")
+
+
+bw_cat2 <- lm(bwcbl_big ~ sex*Category, data = mink)
+summary(bw_cat2)
+emmeans(bw_cat2, pairwise ~ sex*Category)
+plot(allEffects(bw_cat2))
+tab_model(bw_cat2, digits = 2, file = "bw_table_category2.doc")
+```
+
+
+```{figure 1}
+ggplot(data = mink, aes(x=Category, y=volcalc_cbl3, color = sex))+
+  geom_violin(trim = FALSE)+
+  geom_point(position = position_jitterdodge(dodge.width = 0.9))+
+  geom_signif(#
+  aes(xmin = 1.0, xmax = 2.0, y_position = 0.007, annotations = "****", group = sex),
+  data = subset(minks_nov, sex %in% "F"), manual = TRUE, tip_length = 0.01, vjust = 0.5, color = "#bdbdbd")+
+  geom_signif(#
+  aes(xmin = 2.0, xmax = 3.0, y_position = 0.006, annotations = "****", group = sex),
+  data = subset(minks_nov, sex %in% "F"), manual = TRUE, tip_length = 0.01, vjust = 0.5, color = "#bdbdbd")+
+  geom_signif(#
+  aes(xmin = 1.0, xmax = 3.0, y_position = 0.0075, annotations = "*", group = sex),
+  data = subset(minks_nov, sex %in% "F"), manual = TRUE, tip_length = 0.01, vjust = 0.5, color = "#bdbdbd")+
+  geom_signif(#male wild - feral
+  aes(xmin = 1.0, xmax = 2.0, y_position = 0.0065, annotations = "****", group = sex),
+  data = subset(minks_nov, sex %in% "M"), manual = TRUE, tip_length = 0.01, vjust = 0.5, color = "#636363")+
+  geom_signif(#male feral - farm
+  aes(xmin = 2.0, xmax = 3.0, y_position = 0.0058, annotations = "****", group = sex),
+  data = subset(minks_nov, sex %in% "M"), manual = TRUE, tip_length = 0.01, vjust = 0.5, color = "#636363")+
+  geom_signif(#male wild - feral
+  aes(xmin = 1.0, xmax = 3.0, y_position = 0.0075, annotations = "***", group = sex),
+  data = subset(minks_nov, sex %in% "M"), manual = TRUE, tip_length = 0.01, vjust = 0.5, color = "#636363")+
+  theme_classic2()+
+  scale_fill_manual(values=c("#bdbdbd", "#636363"))+
+  scale_colour_manual(values=c("#bdbdbd", "#636363"))+
+  theme(legend.position = "none")+
+  theme(axis.text.y=element_text(size=15), axis.text.x = element_text(size = 20), axis.title.y = element_text(size = 17))+
+  xlab("")+
+  ylab("Vol/CBL^3")+labs(x= expression(""), 
+                         y= expression("Vol/"*CBL^{3}))+
+  facet_wrap("sex", ncol = 2)
+```
+
+
+```{r figure two}
+
+setwd("/Users/ankapohle/Desktop/minks on my desktop/data")
+vol_models <- read_delim("vol_models.csv",",", escape_double = FALSE, trim_ws = TRUE, locale=locale(decimal_mark = "."))
+
+my_palette <- c("#67001f", "#d6604d", "#f4a582", "#92c5de", "#2166ac", "#053061")
+
+ggplot(vol_models[vol_models$...1 %in% c("wild M - wild F", "wild M - farm M", "wild M - feral M", "wild F - farm F", "wild F - feral F", "farm M - farm F", "feral M - feral F", "feral M - farm M", "feral F - farm F"),], aes(x=estimate, y = intercept, col = compared_with))+ 
+  geom_point(position=ggstance::position_dodgev(height=0.6))+
+  geom_linerange(position=ggstance::position_dodgev(height=0.6),aes(xmin=lower_Cl, xmax= upper_Cl))+
+  geom_vline(xintercept = 0)+
+  geom_text(aes(label = compared_with), size = 3, position=ggstance::position_dodgev(height=0.6), vjust = -0.7)+
+  scale_color_manual(values = my_palette)+
+  scale_x_continuous(breaks=c(-2,-1,0,1,2), limits = c(-2, 2))+ 
+  theme_classic()+
+  theme(legend.position = "none", axis.text.y=element_text(size=13), axis.text.x = element_text(size = 15), axis.title.x = element_text(size = 15),axis.title.y = element_text(size = 15))+
+  ylab("Intercept")+
+  xlab("Estimate")
+```
+
+#####Supplementary Material#####
+
+#####Tables#####
+
+
+```{r medians and SD for Supplementary Table S1}
+###CBL####
+median(minks_nov_f$CBL[minks_nov_f$Category=="feral"], na.rm=TRUE) 
+median(minks_nov_m$CBL[minks_nov_m$Category=="feral"], na.rm=TRUE) 
+sd(minks_nov_f$CBL[minks_nov_f$Category=="feral"], na.rm=TRUE) 
+sd(minks_nov_m$CBL[minks_nov_m$Category=="feral"], na.rm=TRUE) 
+
+median(minks_nov_f$CBL[minks_nov_f$Category=="wild"], na.rm=TRUE) 
+median(minks_nov_m$CBL[minks_nov_m$Category=="wild"], na.rm=TRUE) 
+sd(minks_nov_f$CBL[minks_nov_f$Category=="wild"], na.rm=TRUE) 
+sd(minks_nov_m$CBL[minks_nov_m$Category=="wild"], na.rm=TRUE) 
+
+median(minks_nov_f$CBL[minks_nov_f$Category=="farm"], na.rm=TRUE) 
+median(minks_nov_m$CBL[minks_nov_m$Category=="farm"], na.rm=TRUE) 
+sd(minks_nov_f$CBL[minks_nov_f$Category=="farm"], na.rm=TRUE) 
+sd(minks_nov_m$CBL[minks_nov_m$Category=="farm"], na.rm=TRUE) 
+
+
+#####
+median(minks_nov_f$vol_calc[minks_nov_f$Category=="feral"], na.rm=TRUE) #
+median(minks_nov_m$vol_calc[minks_nov_m$Category=="feral"], na.rm=TRUE) #
+sd(minks_nov_f$vol_calc[minks_nov_f$Category=="feral"], na.rm=TRUE) #
+sd(minks_nov_m$vol_calc[minks_nov_m$Category=="feral"], na.rm=TRUE) #
+
+median(minks_nov_f$vol_calc[minks_nov_f$Category=="wild"], na.rm=TRUE) #
+median(minks_nov_m$vol_calc[minks_nov_m$Category=="wild"], na.rm=TRUE) #
+sd(minks_nov_f$vol_calc[minks_nov_f$Category=="wild"], na.rm=TRUE) #
+sd(minks_nov_m$vol_calc[minks_nov_m$Category=="wild"], na.rm=TRUE) #
+
+median(minks_nov_f$vol_calc[minks_nov_f$Category=="farm"], na.rm=TRUE) #
+median(minks_nov_m$vol_calc[minks_nov_m$Category=="farm"], na.rm=TRUE) #
+sd(minks_nov_f$vol_calc[minks_nov_f$Category=="farm"], na.rm=TRUE) #
+sd(minks_nov_m$vol_calc[minks_nov_m$Category=="farm"], na.rm=TRUE) #
+
+```
+
+
+```{r Supplementary Table S5}
+emmeans(vol_cat, pairwise ~ sex*Category)
+```
+

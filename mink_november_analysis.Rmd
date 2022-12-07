@@ -10,6 +10,8 @@ This document contains the code used for analysing the dataset "mink_november" w
 ```{r}
 library(tidyverse)
 library(sjPlot)
+library(ggplot2)
+library(ggsignif)
 library(emmeans)
 library(cowplot)
 library(lme4)
@@ -72,7 +74,7 @@ ggplot(data = mink, aes(x=Category, y=volcalc_cbl3, color = sex))+
   geom_signif(#male wild - feral
   aes(xmin = 1.0, xmax = 3.0, y_position = 0.0075, annotations = "***", group = sex),
   data = subset(minks_nov, sex %in% "M"), manual = TRUE, tip_length = 0.01, vjust = 0.5, color = "#636363")+
-  theme_classic2()+
+  theme_classic()+
   scale_fill_manual(values=c("#bdbdbd", "#636363"))+
   scale_colour_manual(values=c("#bdbdbd", "#636363"))+
   theme(legend.position = "none")+
@@ -109,125 +111,140 @@ ggplot(vol_models[vol_models$...1 %in% c("wild M - wild F", "wild M - farm M", "
 
 #####Supplementary Tables#####
 
-Supplementary Table 1 was configured by using the below code to extract median and standard deviation values. The values were manually put into a table in word.
+Supplementary Table 1 was configured by using the below code to extract median and standard deviation values. The values were manually put into a table in word. To run the code for obtaining medians, subsets were created.
+
+```{r}
+
+target <- c("M")
+mink_m <- mink %>%
+  filter(sex %in% target)
+
+target <- c("F")
+mink_f <- mink %>%
+  filter(sex %in% target)
+
+
+```
+
 ```{r medians and SD for Supplementary Table S1}
 ###CBL####
-median(minks_nov_f$CBL[minks_nov_f$Category=="feral"], na.rm=TRUE) 
-median(minks_nov_m$CBL[minks_nov_m$Category=="feral"], na.rm=TRUE) 
-sd(minks_nov_f$CBL[minks_nov_f$Category=="feral"], na.rm=TRUE) 
-sd(minks_nov_m$CBL[minks_nov_m$Category=="feral"], na.rm=TRUE) 
+median(mink_f$CBL[mink_f$Category=="feral"], na.rm=TRUE) 
+median(mink_m$CBL[mink_m$Category=="feral"], na.rm=TRUE) 
+sd(mink_f$CBL[mink_f$Category=="feral"], na.rm=TRUE) 
+sd(mink_m$CBL[mink_m$Category=="feral"], na.rm=TRUE) 
 
-median(minks_nov_f$CBL[minks_nov_f$Category=="wild"], na.rm=TRUE) 
-median(minks_nov_m$CBL[minks_nov_m$Category=="wild"], na.rm=TRUE) 
-sd(minks_nov_f$CBL[minks_nov_f$Category=="wild"], na.rm=TRUE) 
-sd(minks_nov_m$CBL[minks_nov_m$Category=="wild"], na.rm=TRUE) 
+median(mink_f$CBL[mink_f$Category=="wild"], na.rm=TRUE) 
+median(mink_m$CBL[mink_m$Category=="wild"], na.rm=TRUE) 
+sd(mink_f$CBL[mink_f$Category=="wild"], na.rm=TRUE) 
+sd(mink_m$CBL[mink_m$Category=="wild"], na.rm=TRUE) 
 
-median(minks_nov_f$CBL[minks_nov_f$Category=="farm"], na.rm=TRUE) 
-median(minks_nov_m$CBL[minks_nov_m$Category=="farm"], na.rm=TRUE) 
-sd(minks_nov_f$CBL[minks_nov_f$Category=="farm"], na.rm=TRUE) 
-sd(minks_nov_m$CBL[minks_nov_m$Category=="farm"], na.rm=TRUE) 
+median(mink_f$CBL[mink_f$Category=="farm"], na.rm=TRUE) 
+median(mink_m$CBL[mink_m$Category=="farm"], na.rm=TRUE) 
+sd(mink_f$CBL[mink_f$Category=="farm"], na.rm=TRUE) 
+sd(mink_m$CBL[mink_m$Category=="farm"], na.rm=TRUE) 
 
 
 ####Absolute BW####
-median(minks_nov_f$BW[minks_nov_f$Category=="feral"], na.rm=TRUE) 
-median(minks_nov_m$BW[minks_nov_m$Category=="feral"], na.rm=TRUE) 
-sd(minks_nov_f$BW[minks_nov_f$Category=="feral"], na.rm=TRUE) 
-sd(minks_nov_m$BW[minks_nov_m$Category=="feral"], na.rm=TRUE) 
+median(mink_f$BW[mink_f$Category=="feral"], na.rm=TRUE) 
+median(mink_m$BW[mink_m$Category=="feral"], na.rm=TRUE) 
+sd(mink_f$BW[mink_f$Category=="feral"], na.rm=TRUE) 
+sd(mink_m$BW[mink_m$Category=="feral"], na.rm=TRUE) 
 
-median(minks_nov_f$BW[minks_nov_f$Category=="wild"], na.rm=TRUE) 
-median(minks_nov_m$BW[minks_nov_m$Category=="wild"], na.rm=TRUE) 
-sd(minks_nov_f$BW[minks_nov_f$Category=="wild"], na.rm=TRUE) 
-sd(minks_nov_m$BW[minks_nov_m$Category=="wild"], na.rm=TRUE) 
+median(mink_f$BW[mink_f$Category=="wild"], na.rm=TRUE) 
+median(mink_m$BW[mink_m$Category=="wild"], na.rm=TRUE) 
+sd(mink_f$BW[mink_f$Category=="wild"], na.rm=TRUE) 
+sd(mink_m$BW[mink_m$Category=="wild"], na.rm=TRUE) 
 
-median(minks_nov_f$BW[minks_nov_f$Category=="farm"], na.rm=TRUE) 
-median(minks_nov_m$BW[minks_nov_m$Category=="farm"], na.rm=TRUE) 
-sd(minks_nov_f$BW[minks_nov_f$Category=="farm"], na.rm=TRUE) 
-sd(minks_nov_m$BW[minks_nov_m$Category=="farm"], na.rm=TRUE) 
+median(mink_f$BW[mink_f$Category=="farm"], na.rm=TRUE) 
+median(mink_m$BW[mink_m$Category=="farm"], na.rm=TRUE) 
+sd(mink_f$BW[mink_f$Category=="farm"], na.rm=TRUE) 
+sd(mink_m$BW[mink_m$Category=="farm"], na.rm=TRUE) 
 
 
 ####Absolute BH####
-median(minks_nov_f$BH[minks_nov_f$Category=="feral"], na.rm=TRUE) 
-median(minks_nov_m$BH[minks_nov_m$Category=="feral"], na.rm=TRUE) 
-sd(minks_nov_f$BH[minks_nov_f$Category=="feral"], na.rm=TRUE) 
-sd(minks_nov_m$BH[minks_nov_m$Category=="feral"], na.rm=TRUE) 
+median(mink_f$BH[mink_f$Category=="feral"], na.rm=TRUE) 
+median(mink_m$BH[mink_m$Category=="feral"], na.rm=TRUE) 
+sd(mink_f$BH[mink_f$Category=="feral"], na.rm=TRUE) 
+sd(mink_m$BH[mink_m$Category=="feral"], na.rm=TRUE) 
 
-median(minks_nov_f$BH[minks_nov_f$Category=="wild"], na.rm=TRUE) 
-median(minks_nov_m$BH[minks_nov_m$Category=="wild"], na.rm=TRUE) 
-sd(minks_nov_f$BH[minks_nov_f$Category=="wild"], na.rm=TRUE) 
-sd(minks_nov_m$BH[minks_nov_m$Category=="wild"], na.rm=TRUE) 
+median(mink_f$BH[mink_f$Category=="wild"], na.rm=TRUE) 
+median(mink_m$BH[mink_m$Category=="wild"], na.rm=TRUE) 
+sd(mink_f$BH[mink_f$Category=="wild"], na.rm=TRUE) 
+sd(mink_m$BH[mink_m$Category=="wild"], na.rm=TRUE) 
 
-median(minks_nov_f$BH[minks_nov_f$Category=="farm"], na.rm=TRUE) 
-median(minks_nov_m$BH[minks_nov_m$Category=="farm"], na.rm=TRUE) 
-sd(minks_nov_f$BH[minks_nov_f$Category=="farm"], na.rm=TRUE) 
-sd(minks_nov_m$BH[minks_nov_m$Category=="farm"], na.rm=TRUE) 
+median(mink_f$BH[mink_f$Category=="farm"], na.rm=TRUE) 
+median(mink_m$BH[mink_m$Category=="farm"], na.rm=TRUE) 
+sd(mink_f$BH[mink_f$Category=="farm"], na.rm=TRUE) 
+sd(mink_m$BH[mink_m$Category=="farm"], na.rm=TRUE) 
 
 
 #####Absolute Vol####
-median(minks_nov_f$vol_calc[minks_nov_f$Category=="feral"], na.rm=TRUE) 
-median(minks_nov_m$vol_calc[minks_nov_m$Category=="feral"], na.rm=TRUE) 
-sd(minks_nov_f$vol_calc[minks_nov_f$Category=="feral"], na.rm=TRUE) 
-sd(minks_nov_m$vol_calc[minks_nov_m$Category=="feral"], na.rm=TRUE) 
+median(mink_f$vol_calc[mink_f$Category=="feral"], na.rm=TRUE) 
+median(mink_m$vol_calc[mink_m$Category=="feral"], na.rm=TRUE) 
+sd(mink_f$vol_calc[mink_f$Category=="feral"], na.rm=TRUE) 
+sd(mink_m$vol_calc[mink_m$Category=="feral"], na.rm=TRUE) 
 
-median(minks_nov_f$vol_calc[minks_nov_f$Category=="wild"], na.rm=TRUE) 
-median(minks_nov_m$vol_calc[minks_nov_m$Category=="wild"], na.rm=TRUE) 
-sd(minks_nov_f$vol_calc[minks_nov_f$Category=="wild"], na.rm=TRUE) 
-sd(minks_nov_m$vol_calc[minks_nov_m$Category=="wild"], na.rm=TRUE) 
+median(mink_f$vol_calc[mink_f$Category=="wild"], na.rm=TRUE) 
+median(mink_m$vol_calc[mink_m$Category=="wild"], na.rm=TRUE) 
+sd(mink_f$vol_calc[mink_f$Category=="wild"], na.rm=TRUE) 
+sd(mink_m$vol_calc[mink_m$Category=="wild"], na.rm=TRUE) 
 
-median(minks_nov_f$vol_calc[minks_nov_f$Category=="farm"], na.rm=TRUE) 
-median(minks_nov_m$vol_calc[minks_nov_m$Category=="farm"], na.rm=TRUE) 
-sd(minks_nov_f$vol_calc[minks_nov_f$Category=="farm"], na.rm=TRUE) 
-sd(minks_nov_m$vol_calc[minks_nov_m$Category=="farm"], na.rm=TRUE) 
+median(mink_f$vol_calc[mink_f$Category=="farm"], na.rm=TRUE) 
+median(mink_m$vol_calc[mink_m$Category=="farm"], na.rm=TRUE) 
+sd(mink_f$vol_calc[mink_f$Category=="farm"], na.rm=TRUE) 
+sd(mink_m$vol_calc[mink_m$Category=="farm"], na.rm=TRUE) 
 
 
 ####BW/CBL####
-median(minks_nov_f$BW.CBL[minks_nov_f$Category=="feral"], na.rm=TRUE) 
-median(minks_nov_m$BW.CBL[minks_nov_m$Category=="feral"], na.rm=TRUE) 
-sd(minks_nov_f$BW.CBL[minks_nov_f$Category=="feral"], na.rm=TRUE) 
-sd(minks_nov_m$BW.CBL[minks_nov_m$Category=="feral"], na.rm=TRUE) 
+median(mink_f$BW.CBL[mink_f$Category=="feral"], na.rm=TRUE) 
+median(mink_m$BW.CBL[mink_m$Category=="feral"], na.rm=TRUE) 
+sd(mink_f$BW.CBL[mink_f$Category=="feral"], na.rm=TRUE) 
+sd(mink_m$BW.CBL[mink_m$Category=="feral"], na.rm=TRUE) 
 
-median(minks_nov_f$BW.CBL[minks_nov_f$Category=="wild"], na.rm=TRUE) 
-median(minks_nov_m$BW.CBL[minks_nov_m$Category=="wild"], na.rm=TRUE) 
-sd(minks_nov_f$BW.CBL[minks_nov_f$Category=="wild"], na.rm=TRUE) 
-sd(minks_nov_m$BW.CBL[minks_nov_m$Category=="wild"], na.rm=TRUE) 
+median(mink_f$BW.CBL[mink_f$Category=="wild"], na.rm=TRUE) 
+median(mink_m$BW.CBL[mink_m$Category=="wild"], na.rm=TRUE) 
+sd(mink_f$BW.CBL[mink_f$Category=="wild"], na.rm=TRUE) 
+sd(mink_m$BW.CBL[mink_m$Category=="wild"], na.rm=TRUE) 
 
-median(minks_nov_f$BW.CBL[minks_nov_f$Category=="farm"], na.rm=TRUE) 
-median(minks_nov_m$BW.CBL[minks_nov_m$Category=="farm"], na.rm=TRUE) 
-sd(minks_nov_f$BW.CBL[minks_nov_f$Category=="farm"], na.rm=TRUE) 
-sd(minks_nov_m$BW.CBL[minks_nov_m$Category=="farm"], na.rm=TRUE) 
+median(mink_f$BW.CBL[mink_f$Category=="farm"], na.rm=TRUE) 
+median(mink_m$BW.CBL[mink_m$Category=="farm"], na.rm=TRUE) 
+sd(mink_f$BW.CBL[mink_f$Category=="farm"], na.rm=TRUE) 
+sd(mink_m$BW.CBL[mink_m$Category=="farm"], na.rm=TRUE) 
 
 
 ####BH/CBL####
-median(minks_nov_f$BH.CBL[minks_nov_f$Category=="feral"], na.rm=TRUE) 
-median(minks_nov_m$BH.CBL[minks_nov_m$Category=="feral"], na.rm=TRUE) 
-sd(minks_nov_f$BH.CBL[minks_nov_f$Category=="feral"], na.rm=TRUE) 
-sd(minks_nov_m$BH.CBL[minks_nov_m$Category=="feral"], na.rm=TRUE) 
+median(mink_f$BH.CBL[mink_f$Category=="feral"], na.rm=TRUE) 
+median(mink_m$BH.CBL[mink_m$Category=="feral"], na.rm=TRUE) 
+sd(mink_f$BH.CBL[mink_f$Category=="feral"], na.rm=TRUE) 
+sd(mink_m$BH.CBL[mink_m$Category=="feral"], na.rm=TRUE) 
 
-median(minks_nov_f$BH.CBL[minks_nov_f$Category=="wild"], na.rm=TRUE) 
-median(minks_nov_m$BH.CBL[minks_nov_m$Category=="wild"], na.rm=TRUE) 
-sd(minks_nov_f$BH.CBL[minks_nov_f$Category=="wild"], na.rm=TRUE) 
-sd(minks_nov_m$BH.CBL[minks_nov_m$Category=="wild"], na.rm=TRUE) 
+median(mink_f$BH.CBL[mink_f$Category=="wild"], na.rm=TRUE) 
+median(mink_m$BH.CBL[mink_m$Category=="wild"], na.rm=TRUE) 
+sd(mink_f$BH.CBL[mink_f$Category=="wild"], na.rm=TRUE) 
+sd(mink_m$BH.CBL[mink_m$Category=="wild"], na.rm=TRUE) 
 
-median(minks_nov_f$BH.CBL[minks_nov_f$Category=="farm"], na.rm=TRUE) 
-median(minks_nov_m$BH.CBL[minks_nov_m$Category=="farm"], na.rm=TRUE) 
-sd(minks_nov_f$BH.CBL[minks_nov_f$Category=="farm"], na.rm=TRUE) 
-sd(minks_nov_m$BH.CBL[minks_nov_m$Category=="farm"], na.rm=TRUE) 
+median(mink_f$BH.CBL[mink_f$Category=="farm"], na.rm=TRUE) 
+median(mink_m$BH.CBL[mink_m$Category=="farm"], na.rm=TRUE) 
+sd(mink_f$BH.CBL[mink_f$Category=="farm"], na.rm=TRUE) 
+sd(mink_m$BH.CBL[mink_m$Category=="farm"], na.rm=TRUE) 
 
 
 ####Vol/CBL^3####
-median(minks_nov_f$volcalc_cbl3[minks_nov_f$Category=="feral"], na.rm=TRUE) 
-median(minks_nov_m$volcalc_cbl3[minks_nov_m$Category=="feral"], na.rm=TRUE) 
-sd(minks_nov_f$volcalc_cbl3[minks_nov_f$Category=="feral"], na.rm=TRUE) 
-sd(minks_nov_m$volcalc_cbl3[minks_nov_m$Category=="feral"], na.rm=TRUE) 
+median(mink_f$volcalc_cbl3[mink_f$Category=="feral"], na.rm=TRUE) 
+median(mink_m$volcalc_cbl3[mink_m$Category=="feral"], na.rm=TRUE) 
+sd(mink_f$volcalc_cbl3[mink_f$Category=="feral"], na.rm=TRUE) 
+sd(mink_m$volcalc_cbl3[mink_m$Category=="feral"], na.rm=TRUE) 
 
-median(minks_nov_f$volcalc_cbl3[minks_nov_f$Category=="wild"], na.rm=TRUE) 
-median(minks_nov_m$volcalc_cbl3[minks_nov_m$Category=="wild"], na.rm=TRUE) 
-sd(minks_nov_f$volcalc_cbl3[minks_nov_f$Category=="wild"], na.rm=TRUE) 
-sd(minks_nov_m$volcalc_cbl3[minks_nov_m$Category=="wild"], na.rm=TRUE) 
+median(mink_f$volcalc_cbl3[mink_f$Category=="wild"], na.rm=TRUE) 
+median(mink_m$volcalc_cbl3[mink_m$Category=="wild"], na.rm=TRUE) 
+sd(mink_f$volcalc_cbl3[mink_f$Category=="wild"], na.rm=TRUE) 
+sd(mink_m$volcalc_cbl3[mink_m$Category=="wild"], na.rm=TRUE) 
 
-median(minks_nov_f$volcalc_cbl3[minks_nov_f$Category=="farm"], na.rm=TRUE) 
-median(minks_nov_m$volcalc_cbl3[minks_nov_m$Category=="farm"], na.rm=TRUE) 
-sd(minks_nov_f$volcalc_cbl3[minks_nov_f$Category=="farm"], na.rm=TRUE) 
-sd(minks_nov_m$volcalc_cbl3[minks_nov_m$Category=="farm"], na.rm=TRUE) 
+median(mink_f$volcalc_cbl3[mink_f$Category=="farm"], na.rm=TRUE) 
+median(mink_m$volcalc_cbl3[mink_m$Category=="farm"], na.rm=TRUE) 
+sd(mink_f$volcalc_cbl3[mink_f$Category=="farm"], na.rm=TRUE) 
+sd(mink_m$volcalc_cbl3[mink_m$Category=="farm"], na.rm=TRUE) 
+
 
 ```
 

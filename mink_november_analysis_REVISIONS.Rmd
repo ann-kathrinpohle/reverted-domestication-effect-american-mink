@@ -1,0 +1,674 @@
+---
+title: "Mink Analysis"
+output: html_notebook
+author: "Ann-Kathrin Pohle"
+---
+
+This document contains the code used for analysing the dataset "mink_november" which can be found here: https://doi.org/10.17617/3.SFXRZN 
+
+
+```{r}
+library(tidyverse)
+library(sjPlot)
+library(ggplot2)
+library(ggsignif)
+library(emmeans)
+library(cowplot)
+library(lme4)
+```
+
+
+```{r load data}
+setwd("/Users/ankapohle/Desktop")
+mink <- read_delim("mink_november.csv",",", escape_double = FALSE, trim_ws = TRUE, locale=locale(decimal_mark = "."))
+
+#doi for dataframe: https://doi.org/10.17617/3.SFXRZN 
+```
+
+
+```{r linear model volume}
+
+mink$Category <- factor(mink$Category, levels = c("wild", "farm", "feral")) 
+
+vol_cat <- lm(volcalc_cbl3 ~ sex*Category, data = mink)
+summary(vol_cat)
+emmeans(vol_cat, pairwise ~ sex*Category)
+
+```
+
+
+```{r revised lm volume}
+vol_cat_rev <- lm(volcalc_cbl3 ~ sex+Category, data = mink)
+summary(vol_cat_rev)
+pairwise <- emmeans(vol_cat_rev, pairwise ~ sex+Category)
+tab_model(vol_cat_rev, digits = 5)#, file = "vol_table_revisions.doc")
+
+vol_cat_rev_null <- lm(volcalc_cbl3 ~ sex, data = mink)
+vol_cat <- lm(volcalc_cbl3 ~ sex*Category, data = mink)
+anova(vol_cat_rev, vol_cat_rev_null)
+AIC(vol_cat_rev, vol_cat_rev_null, vol_cat)
+
+
+#optional and a sanity check
+install.packages("AICcmodavg")
+library(AICcmodavg)
+models <- list(vol_cat_rev, vol_cat_rev_null)
+model.names <- c("vol_cat_rev", "vol_cat_rev_null")
+aictab(cand.set = models, modnames = model.names)
+```
+
+Former Figure 2 is now Supplementary Figure S3
+
+
+
+```{r linear model braincase height}
+bh_cat <- lm(BH.CBL ~ sex*Category, data = mink)
+summary(bh_cat)
+emmeans(bh_cat, pairwise ~ sex*Category)
+```
+
+
+```{r revised lm bh}
+bh_cat_rev <- lm(BH.CBL ~ sex + Category, data = mink)
+summary(bh_cat_rev)
+emmeans(bh_cat_rev, pairwise ~ sex + Category)
+tab_model(bh_cat_rev, digits = 6)#, file = "bh_table_revisions.doc")
+
+
+bh_cat_rev_null <- lm(BH.CBL ~ sex, data = mink)
+summary(bh_cat_rev_null)
+emmeans(bh_cat_rev_null, pairwise ~ sex)
+bh_cat <- lm(BH.CBL ~ sex*Category, data = mink)
+anova(bh_cat_rev, bh_cat_rev_null)
+AIC(bh_cat_rev, bh_cat_rev_null)
+
+```
+
+
+```{r linear model braincase width}
+bw_cat <- lm(BW.CBL ~ sex*Category, data = mink)
+summary(bw_cat)
+emmeans(bw_cat, pairwise ~ sex*Category)
+```
+
+
+```{r revised lm bw}
+bw_cat_rev <- lm(BW.CBL ~ sex + Category, data = mink)
+summary(bw_cat_rev)
+emmeans(bw_cat_rev, pairwise ~ sex + Category)
+tab_model(bw_cat_rev, digits = 5)#, file = "bw_table_revisions.doc")
+
+bw_cat_rev_null <- lm(BW.CBL ~ sex, data = mink)
+summary(bw_cat_rev_null)
+emmeans(bw_cat_rev_null, pairwise ~ sex)
+bw_cat <- lm(BW.CBL ~ sex*Category, data = mink)
+anova(bw_cat_rev, bw_cat_rev_null)
+AIC(bw_cat_rev, bw_cat_rev_null)
+```
+
+
+```{r figure one}
+ggplot(data = mink, aes(x=Category, y=volcalc_cbl3, color = sex))+
+  geom_violin(trim = FALSE)+
+  geom_point(position = position_jitterdodge(dodge.width = 0.9))+
+  geom_signif(#
+  aes(xmin = 1.0, xmax = 2.0, y_position = 0.007, annotations = "****", group = sex),
+  data = subset(mink, sex %in% "F"), manual = TRUE, tip_length = 0.01, vjust = 0.5, color = "#bdbdbd")+
+  geom_signif(#
+  aes(xmin = 2.0, xmax = 3.0, y_position = 0.006, annotations = "****", group = sex),
+  data = subset(mink, sex %in% "F"), manual = TRUE, tip_length = 0.01, vjust = 0.5, color = "#bdbdbd")+
+  geom_signif(#
+  aes(xmin = 1.0, xmax = 3.0, y_position = 0.0075, annotations = "*", group = sex),
+  data = subset(mink, sex %in% "F"), manual = TRUE, tip_length = 0.01, vjust = 0.5, color = "#bdbdbd")+
+  geom_signif(#male wild - feral
+  aes(xmin = 1.0, xmax = 2.0, y_position = 0.0065, annotations = "****", group = sex),
+  data = subset(mink, sex %in% "M"), manual = TRUE, tip_length = 0.01, vjust = 0.5, color = "#636363")+
+  geom_signif(#male feral - farm
+  aes(xmin = 2.0, xmax = 3.0, y_position = 0.0058, annotations = "****", group = sex),
+  data = subset(mink, sex %in% "M"), manual = TRUE, tip_length = 0.01, vjust = 0.5, color = "#636363")+
+  geom_signif(#male wild - feral
+  aes(xmin = 1.0, xmax = 3.0, y_position = 0.0075, annotations = "***", group = sex),
+  data = subset(mink, sex %in% "M"), manual = TRUE, tip_length = 0.01, vjust = 0.5, color = "#636363")+
+  theme_classic()+
+  scale_fill_manual(values=c("#bdbdbd", "#636363"))+
+  scale_colour_manual(values=c("#bdbdbd", "#636363"))+
+  theme(legend.position = "none")+
+  theme(axis.text.y=element_text(size=15), axis.text.x = element_text(size = 20), axis.title.y = element_text(size = 17))+
+  xlab("")+
+  ylab("Vol/CBL^3")+labs(x= expression(""), 
+                         y= expression("Vol/"*CBL^{3}))+
+  facet_wrap("sex", ncol = 2)
+```
+
+the following chunk has the code for figure one including revisions. the only difference are the asterisks which have changed due to p-value differences in results of the pairwise comparisons.
+```{r revised figure one}
+ggplot(data = mink, aes(x=Category, y=volcalc_cbl3, color = sex))+
+  geom_violin(trim = FALSE)+
+  geom_point(position = position_jitterdodge(dodge.width = 0.9))+
+  geom_signif(#
+  aes(xmin = 1.0, xmax = 2.0, y_position = 0.007, annotations = "****", group = sex),
+  data = subset(mink, sex %in% "F"), manual = TRUE, tip_length = 0.01, vjust = 0.5, color = "#bdbdbd")+
+  geom_signif(#
+  aes(xmin = 2.0, xmax = 3.0, y_position = 0.006, annotations = "****", group = sex),
+  data = subset(mink, sex %in% "F"), manual = TRUE, tip_length = 0.01, vjust = 0.5, color = "#bdbdbd")+
+  geom_signif(#
+  aes(xmin = 1.0, xmax = 3.0, y_position = 0.0075, annotations = "****", group = sex),
+  data = subset(mink, sex %in% "F"), manual = TRUE, tip_length = 0.01, vjust = 0.5, color = "#bdbdbd")+
+  geom_signif(#male wild - feral
+  aes(xmin = 1.0, xmax = 2.0, y_position = 0.0065, annotations = "****", group = sex),
+  data = subset(mink, sex %in% "M"), manual = TRUE, tip_length = 0.01, vjust = 0.5, color = "#636363")+
+  geom_signif(#male feral - farm
+  aes(xmin = 2.0, xmax = 3.0, y_position = 0.0058, annotations = "****", group = sex),
+  data = subset(mink, sex %in% "M"), manual = TRUE, tip_length = 0.01, vjust = 0.5, color = "#636363")+
+  geom_signif(#male wild - feral
+  aes(xmin = 1.0, xmax = 3.0, y_position = 0.0075, annotations = "****", group = sex),
+  data = subset(mink, sex %in% "M"), manual = TRUE, tip_length = 0.01, vjust = 0.5, color = "#636363")+
+  theme_classic()+
+  scale_fill_manual(values=c("#bdbdbd", "#636363"))+
+  scale_colour_manual(values=c("#bdbdbd", "#636363"))+
+  theme(legend.position = "none")+
+  theme(axis.text.y=element_text(size=15), axis.text.x = element_text(size = 20), axis.title.y = element_text(size = 17))+
+  xlab("")+
+  ylab("Vol/CBL^3")+labs(x= expression(""), 
+                         y= expression("Vol/"*CBL^{3}))+
+  facet_wrap("sex", ncol = 2)
+```
+
+
+The values used for the following figure were manually extracted after running each model repeatedly with differing intercepts. The code for changing intercepts and extraction of coefficients and confidence intervals can be found in the file: different_intercept_same_models.Rmd
+These values were manually extracted (not including estimates from interactions) and stored in separate data frames, called "vol_models", "bh_models" and "bw_models". 
+```{r figure two}
+setwd("/Users/ankapohle/Desktop")
+vol_models <- read_delim("vol_models_REVISED.csv",",", escape_double = FALSE, trim_ws = TRUE, locale=locale(decimal_mark = "."))
+
+my_palette <- c("#67001f", "#d6604d", "#f4a582", "#92c5de", "#2166ac", "#053061")
+
+ggplot(vol_models[vol_models$...1 %in% c("wild M - wild F", "wild M - farm M", "wild M - feral M", "wild F - farm F", "wild F - feral F", "farm M - farm F", "feral M - feral F", "feral M - farm M", "feral F - farm F"),], aes(x=estimate, y = intercept, col = compared_with))+ 
+  geom_point(position=ggstance::position_dodgev(height=0.6))+
+  geom_linerange(position=ggstance::position_dodgev(height=0.6),aes(xmin=lower_Cl, xmax= upper_Cl))+
+  geom_vline(xintercept = 0)+
+  geom_text(aes(label = compared_with), size = 3, position=ggstance::position_dodgev(height=0.6), vjust = -0.7)+
+  scale_color_manual(values = my_palette)+
+  scale_x_continuous(breaks=c(-2,-1,0,1,2), limits = c(-2, 2))+ 
+  theme_classic()+
+  theme(legend.position = "none", axis.text.y=element_text(size=13), axis.text.x = element_text(size = 15), axis.title.x = element_text(size = 15),axis.title.y = element_text(size = 15))+
+  ylab("Intercept")+
+  xlab("Estimate")
+```
+
+#####Supplementary Material#####
+
+#####Supplementary Tables#####
+
+Supplementary Table 1 was configured by using the below code to extract median and standard deviation values. The values were manually put into a table in word. To run the code for obtaining medians, subsets were created.
+
+```{r}
+
+target <- c("M")
+mink_m <- mink %>%
+  filter(sex %in% target)
+
+target <- c("F")
+mink_f <- mink %>%
+  filter(sex %in% target)
+
+
+```
+
+
+```{r medians and SD for Supplementary Table S1}
+###CBL####
+median(mink_f$CBL[mink_f$Category=="feral"], na.rm=TRUE) 
+median(mink_m$CBL[mink_m$Category=="feral"], na.rm=TRUE) 
+sd(mink_f$CBL[mink_f$Category=="feral"], na.rm=TRUE) 
+sd(mink_m$CBL[mink_m$Category=="feral"], na.rm=TRUE) 
+
+median(mink_f$CBL[mink_f$Category=="wild"], na.rm=TRUE) 
+median(mink_m$CBL[mink_m$Category=="wild"], na.rm=TRUE) 
+sd(mink_f$CBL[mink_f$Category=="wild"], na.rm=TRUE) 
+sd(mink_m$CBL[mink_m$Category=="wild"], na.rm=TRUE) 
+
+median(mink_f$CBL[mink_f$Category=="farm"], na.rm=TRUE) 
+median(mink_m$CBL[mink_m$Category=="farm"], na.rm=TRUE) 
+sd(mink_f$CBL[mink_f$Category=="farm"], na.rm=TRUE) 
+sd(mink_m$CBL[mink_m$Category=="farm"], na.rm=TRUE) 
+
+
+####Absolute BW####
+median(mink_f$BW[mink_f$Category=="feral"], na.rm=TRUE) 
+median(mink_m$BW[mink_m$Category=="feral"], na.rm=TRUE) 
+sd(mink_f$BW[mink_f$Category=="feral"], na.rm=TRUE) 
+sd(mink_m$BW[mink_m$Category=="feral"], na.rm=TRUE) 
+
+median(mink_f$BW[mink_f$Category=="wild"], na.rm=TRUE) 
+median(mink_m$BW[mink_m$Category=="wild"], na.rm=TRUE) 
+sd(mink_f$BW[mink_f$Category=="wild"], na.rm=TRUE) 
+sd(mink_m$BW[mink_m$Category=="wild"], na.rm=TRUE) 
+
+median(mink_f$BW[mink_f$Category=="farm"], na.rm=TRUE) 
+median(mink_m$BW[mink_m$Category=="farm"], na.rm=TRUE) 
+sd(mink_f$BW[mink_f$Category=="farm"], na.rm=TRUE) 
+sd(mink_m$BW[mink_m$Category=="farm"], na.rm=TRUE) 
+
+
+####Absolute BH####
+median(mink_f$BH[mink_f$Category=="feral"], na.rm=TRUE) 
+median(mink_m$BH[mink_m$Category=="feral"], na.rm=TRUE) 
+sd(mink_f$BH[mink_f$Category=="feral"], na.rm=TRUE) 
+sd(mink_m$BH[mink_m$Category=="feral"], na.rm=TRUE) 
+
+median(mink_f$BH[mink_f$Category=="wild"], na.rm=TRUE) 
+median(mink_m$BH[mink_m$Category=="wild"], na.rm=TRUE) 
+sd(mink_f$BH[mink_f$Category=="wild"], na.rm=TRUE) 
+sd(mink_m$BH[mink_m$Category=="wild"], na.rm=TRUE) 
+
+median(mink_f$BH[mink_f$Category=="farm"], na.rm=TRUE) 
+median(mink_m$BH[mink_m$Category=="farm"], na.rm=TRUE) 
+sd(mink_f$BH[mink_f$Category=="farm"], na.rm=TRUE) 
+sd(mink_m$BH[mink_m$Category=="farm"], na.rm=TRUE) 
+
+
+#####Absolute Vol####
+median(mink_f$vol_calc[mink_f$Category=="feral"], na.rm=TRUE) 
+median(mink_m$vol_calc[mink_m$Category=="feral"], na.rm=TRUE) 
+sd(mink_f$vol_calc[mink_f$Category=="feral"], na.rm=TRUE) 
+sd(mink_m$vol_calc[mink_m$Category=="feral"], na.rm=TRUE) 
+
+median(mink_f$vol_calc[mink_f$Category=="wild"], na.rm=TRUE) 
+median(mink_m$vol_calc[mink_m$Category=="wild"], na.rm=TRUE) 
+sd(mink_f$vol_calc[mink_f$Category=="wild"], na.rm=TRUE) 
+sd(mink_m$vol_calc[mink_m$Category=="wild"], na.rm=TRUE) 
+
+median(mink_f$vol_calc[mink_f$Category=="farm"], na.rm=TRUE) 
+median(mink_m$vol_calc[mink_m$Category=="farm"], na.rm=TRUE) 
+sd(mink_f$vol_calc[mink_f$Category=="farm"], na.rm=TRUE) 
+sd(mink_m$vol_calc[mink_m$Category=="farm"], na.rm=TRUE) 
+
+
+####BW/CBL####
+median(mink_f$BW.CBL[mink_f$Category=="feral"], na.rm=TRUE) 
+median(mink_m$BW.CBL[mink_m$Category=="feral"], na.rm=TRUE) 
+sd(mink_f$BW.CBL[mink_f$Category=="feral"], na.rm=TRUE) 
+sd(mink_m$BW.CBL[mink_m$Category=="feral"], na.rm=TRUE) 
+
+median(mink_f$BW.CBL[mink_f$Category=="wild"], na.rm=TRUE) 
+median(mink_m$BW.CBL[mink_m$Category=="wild"], na.rm=TRUE) 
+sd(mink_f$BW.CBL[mink_f$Category=="wild"], na.rm=TRUE) 
+sd(mink_m$BW.CBL[mink_m$Category=="wild"], na.rm=TRUE) 
+
+median(mink_f$BW.CBL[mink_f$Category=="farm"], na.rm=TRUE) 
+median(mink_m$BW.CBL[mink_m$Category=="farm"], na.rm=TRUE) 
+sd(mink_f$BW.CBL[mink_f$Category=="farm"], na.rm=TRUE) 
+sd(mink_m$BW.CBL[mink_m$Category=="farm"], na.rm=TRUE) 
+
+
+####BH/CBL####
+median(mink_f$BH.CBL[mink_f$Category=="feral"], na.rm=TRUE) 
+median(mink_m$BH.CBL[mink_m$Category=="feral"], na.rm=TRUE) 
+sd(mink_f$BH.CBL[mink_f$Category=="feral"], na.rm=TRUE) 
+sd(mink_m$BH.CBL[mink_m$Category=="feral"], na.rm=TRUE) 
+
+median(mink_f$BH.CBL[mink_f$Category=="wild"], na.rm=TRUE) 
+median(mink_m$BH.CBL[mink_m$Category=="wild"], na.rm=TRUE) 
+sd(mink_f$BH.CBL[mink_f$Category=="wild"], na.rm=TRUE) 
+sd(mink_m$BH.CBL[mink_m$Category=="wild"], na.rm=TRUE) 
+
+median(mink_f$BH.CBL[mink_f$Category=="farm"], na.rm=TRUE) 
+median(mink_m$BH.CBL[mink_m$Category=="farm"], na.rm=TRUE) 
+sd(mink_f$BH.CBL[mink_f$Category=="farm"], na.rm=TRUE) 
+sd(mink_m$BH.CBL[mink_m$Category=="farm"], na.rm=TRUE) 
+
+
+####Vol/CBL^3####
+median(mink_f$volcalc_cbl3[mink_f$Category=="feral"], na.rm=TRUE) 
+median(mink_m$volcalc_cbl3[mink_m$Category=="feral"], na.rm=TRUE) 
+sd(mink_f$volcalc_cbl3[mink_f$Category=="feral"], na.rm=TRUE) 
+sd(mink_m$volcalc_cbl3[mink_m$Category=="feral"], na.rm=TRUE) 
+
+median(mink_f$volcalc_cbl3[mink_f$Category=="wild"], na.rm=TRUE) 
+median(mink_m$volcalc_cbl3[mink_m$Category=="wild"], na.rm=TRUE) 
+sd(mink_f$volcalc_cbl3[mink_f$Category=="wild"], na.rm=TRUE) 
+sd(mink_m$volcalc_cbl3[mink_m$Category=="wild"], na.rm=TRUE) 
+
+median(mink_f$volcalc_cbl3[mink_f$Category=="farm"], na.rm=TRUE) 
+median(mink_m$volcalc_cbl3[mink_m$Category=="farm"], na.rm=TRUE) 
+sd(mink_f$volcalc_cbl3[mink_f$Category=="farm"], na.rm=TRUE) 
+sd(mink_m$volcalc_cbl3[mink_m$Category=="farm"], na.rm=TRUE) 
+
+```
+
+Supplementary Tables S2, S3 and S4 were manually configured after manually calculating each value.
+
+Supplementary Table S5 was configured using the below code. This code will compare all possible combinations. To simplify, we only kept and displayed comparisons of interest in our manuscript (E.g. Comparisons such as M feral - M wild were displayed while comparisons such as M feral - F wild were left out). To facilitate readability (larger estimate and CI values), we displayed a table that used values multiplied by 1000.
+
+```{r Supplementary Table S5}
+vol_cat2 <- lm(volcbl3_big ~ sex*Category, data = mink)
+emmeans(vol_cat, pairwise ~ sex*Category)
+```
+
+To facilitate readability (larger estimate and CI values), we displayed a table that used values multiplied by 1000.
+```{r Supplementary Table S6}
+bh_cat2 <- lm(bhcbl_big ~ sex*Category, data = mink)
+tab_model(bh_cat2, digits = 2)
+```
+
+See description for Supplementary Table S5. 
+```{r Supplementary Table S7}
+emmeans(bh_cat2, pairwise ~ sex*Category)
+```
+
+To facilitate readability (larger estimate and CI values), we displayed a table that used values multiplied by 1000.
+```{r Supplementary Table S8}
+bw_cat2 <- lm(bwcbl_big ~ sex*Category, data = mink)
+tab_model(bw_cat2, digits = 2)
+```
+
+See description for Supplementary Table S5.
+```{r Supplementary Table S9}
+emmeans(bw_cat2, pairwise ~ sex*Category)
+```
+
+
+#####Supplementary Figures#####
+
+
+Supplementary Figure 1 was created manually outside of R. 
+
+```{r Supplementary Figure S2}
+
+cbl <- ggplot (data = subset(mink, month == c("11")), aes(x=Category, y=CBL))+geom_boxplot(aes(fill=sex))+
+  theme_classic2()+
+  scale_colour_manual(values=c("#f0f0f0", "#bdbdbd")) + 
+  scale_fill_manual(values=c("#f0f0f0", "#bdbdbd"))+
+  theme(legend.position = "none")+
+  theme(axis.text.y=element_text(size=15), axis.text.x = element_blank(), axis.title.y = element_text(size = 17))+
+  ggtitle("")+
+  xlab("")+
+  ylab("CBL")
+cbl
+
+vol <- ggplot (data = subset(mink, month == c("11")), aes(x=Category, y=vol_calc))+
+  geom_boxplot(aes(fill=sex))+
+  theme_classic2()+
+  scale_colour_manual(values=c("#f0f0f0", "#bdbdbd")) + 
+  scale_fill_manual(values=c("#f0f0f0", "#bdbdbd"))+
+  theme(legend.position = "none")+
+  theme(axis.text.y=element_text(size=15), axis.text.x = element_blank(), axis.title.y = element_text(size = 17))+
+  ggtitle("")+
+  xlab("")+
+  ylab("Vol")
+
+vol
+
+volbycbl3 <- ggplot (data = subset(mink, month == c("11")), aes(x=Category, y=volcalc_cbl3))+
+  geom_boxplot(aes(fill=sex))+
+  theme_classic2()+
+  scale_colour_manual(values=c("#f0f0f0", "#bdbdbd")) + 
+  scale_fill_manual(values=c("#f0f0f0", "#bdbdbd"))+
+  theme(legend.position = "none")+
+  theme(axis.text.y=element_text(size=15), axis.text.x = element_text(size = 20), axis.title.y = element_text(size = 17))+
+  xlab("")+
+  ylab("Vol/CBL^3")+labs(x= expression(""), 
+                         y= expression("Vol/"*CBL^{3}))
+volbycbl3
+
+
+plot_grid(cbl, vol, volbycbl3,
+          nrow = 3,  
+          align = "hv",
+          axis = "l",
+          rel_heights = 5,
+          labels = c("a", "b", "c"),
+          label_size = 15)
+
+```
+
+
+
+```{r revised Supplementary Figure S3}
+pairwise <- emmeans(vol_cat_rev, pairwise ~ sex+Category)
+pairwise.df <- data.frame(pairwise$contrasts)
+pairwise.df$new <- pairwise.df$contrast
+
+pairwise.df <- separate(data = pairwise.df, col = new, into = c("first", "second"), sep = "\\-")
+
+ggplot(pairwise.df[pairwise.df$contrast %in% c("F wild - F farm", "F wild - F feral", "F farm - F feral", "M wild - M farm", "M farm - M feral", "M wild - M feral"),], aes(x=estimate*1000, y = second))+ 
+  geom_point( aes(x = estimate*1000))+#,ggstance::position_dodgev(height=0.6))+
+  geom_linerange(aes(xmin=estimate *1000 - SE *1000, xmax= estimate*1000 + SE*1000))+
+                   #ggstance::position_dodgev(height=0.6), aes(xmin=estimate *1000 - SE *1000, xmax= estimate*1000 + SE*1000))+
+  geom_vline(xintercept = 0)+
+  geom_text(vjust = -0.6, aes(label = first))+
+  #geom_text(aes(label = first), size = 3, (position = position_dodge2(width = 0.5), vjust =0.4))+#, vjust = -0.7))+
+  scale_x_continuous(breaks=c(-2,-1,0,1,2), limits = c(-2, 2))+ 
+  #scale_y_discrete(labels = c("M feral", "M farm", "M feral", "M wild", "F feral", "F farm", "M feral", "M farm", "F feral"))+
+  theme_classic()+
+  theme(legend.position = "none", axis.text.y=element_text(size=13), axis.text.x = element_text(size = 15), axis.title.x = element_text(size = 15),axis.title.y = element_text(size = 15))+
+  ylab("Intercept")+
+  xlab("Estimate")
+```
+
+
+
+```{r Supplementary Figure S4}
+ggplot(data = mink, aes(x=Category, y=BH.CBL, color = sex))+
+  geom_violin(trim = FALSE)+
+  geom_point(position = position_jitterdodge(dodge.width = 0.9))+
+  geom_signif(# female wild - farm
+  aes(xmin = 1.0, xmax = 2.0, y_position = 0.375, annotations = "****", group = sex),
+  data = subset(mink, sex %in% "F"), manual = TRUE, tip_length = 0.01, vjust = 0.5, color = "#bdbdbd")+
+  geom_signif(# female feral - farm
+  aes(xmin = 2.0, xmax = 3.0, y_position = 0.380, annotations = "****", group = sex),
+  data = subset(mink, sex %in% "F"), manual = TRUE, tip_length = 0.01, vjust = 0.5, color = "#bdbdbd")+
+  geom_signif(# female wild- feral
+  aes(xmin = 1.0, xmax = 3.0, y_position = 0.390, annotations = "ns", group = sex),
+  data = subset(mink, sex %in% "F"), manual = TRUE, tip_length = 0.01, vjust = 0.0, color = "#bdbdbd")+
+  geom_signif(#male wild - farm
+  aes(xmin = 1.0, xmax = 2.0, y_position = 0.385, annotations = "****", group = sex),
+  data = subset(mink, sex %in% "M"), manual = TRUE, tip_length = 0.01, vjust = 0.5, color = "#636363")+
+  geom_signif(#male feral - farm
+  aes(xmin = 2.0, xmax = 3.0, y_position = 0.375, annotations = "****", group = sex),
+  data = subset(mink, sex %in% "M"), manual = TRUE, tip_length = 0.01, vjust = 0.5, color = "#636363")+
+  geom_signif(#male wild - feral
+  aes(xmin = 1.0, xmax = 3.0, y_position = 0.395, annotations = "****", group = sex),
+  data = subset(mink, sex %in% "M"), manual = TRUE, tip_length = 0.01, vjust = 0.5, color = "#636363")+
+  theme_classic2()+
+  scale_fill_manual(values=c("#bdbdbd", "#636363"))+
+  scale_colour_manual(values=c("#bdbdbd", "#636363"))+
+  theme(legend.position = "none")+
+  theme(axis.text.y=element_text(size=15), axis.text.x = element_text(size = 20), axis.title.y = element_text(size = 17))+
+  xlab("")+
+  ylab("BH/CBL")+
+  facet_wrap("sex", ncol = 2)
+```
+
+
+The values used for the following figure were manually extracted after running each model repeatedly with differing intercepts. The code for changing intercepts and extraction of coefficients and confidence intervals can be found in the file: different_intercept_same_models.Rmd
+These values were manually extracted (not including estimates from interactions) and stored in separate data frames (.cvs files), called "vol_models", "bh_models" and "bw_models". 
+
+```{r Revised Supplementary Figure S5 }
+pairwise.bh <- emmeans(bh_cat_rev, pairwise ~ sex+Category)
+pairwise.bh.df <- data.frame(pairwise.bh$contrasts)
+pairwise.bh.df$new <- pairwise.bh.df$contrast
+
+pairwise.bh.df <- separate(data = pairwise.bh.df, col = new, into = c("first", "second"), sep = "\\-")
+
+ggplot(pairwise.bh.df[pairwise.bh.df$contrast %in% c("F wild - F farm", "F wild - F feral", "F farm - F feral", "M wild - M farm", "M farm - M feral", "M wild - M feral"),], aes(x=estimate*1000, y = second))+ 
+  geom_point( aes(x = estimate*1000))+#,ggstance::position_dodgev(height=0.6))+
+  geom_linerange(aes(xmin=estimate *1000 - SE *1000, xmax= estimate*1000 + SE*1000))+
+                   #ggstance::position_dodgev(height=0.6), aes(xmin=estimate *1000 - SE *1000, xmax= estimate*1000 + SE*1000))+
+  geom_vline(xintercept = 0)+
+  geom_text(vjust = -0.6, aes(label = first))+
+  #geom_text(aes(label = first), size = 3, (position = position_dodge2(width = 0.5), vjust =0.4))+#, vjust = -0.7))+
+  scale_x_continuous(breaks=c(-20,-10,0,10,20,30), limits = c(-20, 30))+ 
+  #scale_y_discrete(labels = c("M feral", "M farm", "M feral", "M wild", "F feral", "F farm", "M feral", "M farm", "F feral"))+
+  theme_classic()+
+  theme(legend.position = "none", axis.text.y=element_text(size=13), axis.text.x = element_text(size = 15), axis.title.x = element_text(size = 15),axis.title.y = element_text(size = 15))+
+  ylab("Intercept")+
+  xlab("Estimate")
+```
+
+
+```{r Supplementary Figure S6}
+ggplot(data = minks_nov, aes(x=Category, y=BW.CBL, color = sex))+
+  geom_violin(trim = FALSE)+
+  geom_point(position = position_jitterdodge(dodge.width = 0.9))+
+  geom_signif(# female wild - farm
+  aes(xmin = 1.0, xmax = 2.0, y_position = 0.490, annotations = "****", group = sex),
+  data = subset(minks_nov, sex %in% "F"), manual = TRUE, tip_length = 0.01, vjust = 0.5, color = "#bdbdbd")+
+  geom_signif(# female feral - farm
+  aes(xmin = 2.0, xmax = 3.0, y_position = 0.510, annotations = "****", group = sex),
+  data = subset(minks_nov, sex %in% "F"), manual = TRUE, tip_length = 0.01, vjust = 0.5, color = "#bdbdbd")+
+  geom_signif(# female wild- feral
+  aes(xmin = 1.0, xmax = 3.0, y_position = 0.515, annotations = "ns", group = sex),
+  data = subset(minks_nov, sex %in% "F"), manual = TRUE, tip_length = 0.01, vjust = 0.0, color = "#bdbdbd")+
+  geom_signif(#male wild - farm
+  aes(xmin = 1.0, xmax = 2.0, y_position = 0.505, annotations = "****", group = sex),
+  data = subset(minks_nov, sex %in% "M"), manual = TRUE, tip_length = 0.01, vjust = 0.5, color = "#636363")+
+  geom_signif(#male feral - farm
+  aes(xmin = 2.0, xmax = 3.0, y_position = 0.500, annotations = "****", group = sex),
+  data = subset(minks_nov, sex %in% "M"), manual = TRUE, tip_length = 0.01, vjust = 0.5, color = "#636363")+
+  geom_signif(#male wild - feral
+  aes(xmin = 1.0, xmax = 3.0, y_position = 0.513, annotations = "ns", group = sex),
+  data = subset(minks_nov, sex %in% "M"), manual = TRUE, tip_length = 0.01, vjust = 0.0, color = "#636363")+
+  theme_classic2()+
+  scale_fill_manual(values=c("#bdbdbd", "#636363"))+
+  scale_colour_manual(values=c("#bdbdbd", "#636363"))+
+  theme(legend.position = "none")+
+  theme(axis.text.y=element_text(size=15), axis.text.x = element_text(size = 20), axis.title.y = element_text(size = 17))+
+  xlab("")+
+  ylab("BW/CBL")+
+  facet_wrap("sex", ncol = 2)
+```
+
+
+The values used for the following figure were manually extracted after running each model repeatedly with differing intercepts. The code for changing intercepts and extraction of coefficients and confidence intervals can be found in the file: different_intercept_same_models.Rmd
+These values were manually extracted (not including estimates from interactions) and stored in separate data frames, called "vol_models", "bh_models" and "bw_models". 
+
+
+```{r Revised Supplementary Figure S7}
+pairwise.bw <- emmeans(bw_cat_rev, pairwise ~ sex+Category)
+pairwise.bw.df <- data.frame(pairwise.bw$contrasts)
+pairwise.bw.df$new <- pairwise.bw.df$contrast
+
+pairwise.bw.df <- separate(data = pairwise.bw.df, col = new, into = c("first", "second"), sep = "\\-")
+
+ggplot(pairwise.bw.df[pairwise.bw.df$contrast %in% c("F wild - F farm", "F wild - F feral", "F farm - F feral", "M wild - M farm", "M farm - M feral", "M wild - M feral"),], aes(x=estimate*1000, y = second))+ 
+  geom_point( aes(x = estimate*1000))+#,ggstance::position_dodgev(height=0.6))+
+  geom_linerange(aes(xmin=estimate *1000 - SE *1000, xmax= estimate*1000 + SE*1000))+
+                   #ggstance::position_dodgev(height=0.6), aes(xmin=estimate *1000 - SE *1000, xmax= estimate*1000 + SE*1000))+
+  geom_vline(xintercept = 0)+
+  geom_text(vjust = -0.6, aes(label = first))+
+  #geom_text(aes(label = first), size = 3, (position = position_dodge2(width = 0.5), vjust =0.4))+#, vjust = -0.7))+
+  scale_x_continuous(breaks=c(-20,-10,0,10,20,30), limits = c(-25, 35))+ 
+  theme_classic()+
+  theme(legend.position = "none", axis.text.y=element_text(size=13), axis.text.x = element_text(size = 15), axis.title.x = element_text(size = 15),axis.title.y = element_text(size = 15))+
+  ylab("Intercept")+
+  xlab("Estimate")
+```
+
+
+
+```{r Supplementary Figure S8}
+
+cbl <- ggplot (data = subset(mink, month == c("11")), aes(x=Category, y=CBL))+geom_boxplot(aes(fill=sex))+
+  theme_classic2()+
+  scale_colour_manual(values=c("#f0f0f0", "#bdbdbd")) + 
+  scale_fill_manual(values=c("#f0f0f0", "#bdbdbd"))+
+  theme(legend.position = "none")+
+  theme(plot.title = element_text(size = 23))+
+  theme(axis.text.y=element_text(size=15), axis.text.x = element_blank(), axis.title.y = element_text(size = 17))+
+  ggtitle("")+
+  xlab("")+
+  ylab("CBL")
+
+BH <- ggplot (data = subset(mink, month == c("11")), aes(x=Category, y=BH))+
+  geom_boxplot(aes(fill=sex))+
+  theme_classic2()+
+  scale_colour_manual(values=c("#f0f0f0", "#bdbdbd")) + 
+  scale_fill_manual(values=c("#f0f0f0", "#bdbdbd"))+
+  theme(legend.position = "none")+
+  theme(plot.title = element_text(size = 23))+
+  theme(axis.text.y=element_text(size=15), axis.text.x = element_blank(), axis.title.y = element_text(size = 17))+
+  ggtitle("")+
+  xlab("")+
+  ylab("BH")
+
+vol <- ggplot (data = subset(mink, month == c("11")), aes(x=Category, y=vol_calc))+
+  geom_boxplot(aes(fill=sex))+
+  theme_classic2()+
+  scale_colour_manual(values=c("#f0f0f0", "#bdbdbd")) + 
+  scale_fill_manual(values=c("#f0f0f0", "#bdbdbd"))+
+  theme(legend.position = "none")+
+  theme(plot.title = element_text(size = 23))+
+  theme(axis.text.y=element_text(size=15), axis.text.x = element_text(size = 20), axis.title.y = element_text(size = 17))+
+  ggtitle("")+
+  xlab("")+
+  ylab("Vol")
+
+BW <- ggplot(data = subset(mink, month == c("11")), aes(x = Category, y = BW))+
+  geom_boxplot(aes(fill=sex))+
+  theme_classic2()+
+  scale_colour_manual(values=c("#f0f0f0", "#bdbdbd")) + 
+  scale_fill_manual(values=c("#f0f0f0", "#bdbdbd"))+
+  theme(legend.position = "none")+
+  theme(plot.title = element_text(size = 23))+
+  theme(axis.text.y=element_text(size=15), axis.text.x = element_text(size = 20), axis.title.y = element_text(size = 17))+
+  ggtitle("")+
+  xlab("")+
+  ylab("BW")
+
+cowplot::plot_grid(cbl, BH, vol, BW,
+          align = "v",
+          axis = "lr",
+          labels = c("a", "b", "c", "d"),
+          label_size = 15)
+
+```
+
+
+```{r Supplementary Figure S9}
+bwcbl <- ggplot (data = mink, aes(x=Category, y=BW.CBL))+
+  geom_boxplot(aes(fill=sex))+
+  theme_classic2()+
+  scale_colour_manual(values=c("#f0f0f0", "#bdbdbd")) + 
+  scale_fill_manual(values=c("#f0f0f0", "#bdbdbd"))+
+  theme(legend.position = "none")+
+  theme(plot.title = element_text(size = 23))+
+  theme(axis.text.y=element_text(size=15), axis.text.x = element_text(size = 20), axis.title.y = element_text(size = 17))+
+  xlab("")+
+  ylab("BW/CBL")
+
+
+volcbl <- ggplot(data = mink, aes(x = Category, y = volcalc_cbl3))+
+  geom_boxplot(aes(fill=sex))+
+  scale_colour_manual(values=c("#f0f0f0", "#bdbdbd")) + 
+  scale_fill_manual(values=c("#f0f0f0", "#bdbdbd"))+
+  theme_classic2()+
+  theme(legend.position = "none")+
+  theme(plot.title = element_text(size = 23))+
+  theme(axis.text.y=element_text(size=15), axis.text.x = element_blank(), axis.title.y = element_text(size = 17))+
+  xlab("")+
+  ylab("Vol/CBL^3")+labs(x= expression(""), 
+       y= expression("Vol/"*CBL^{3}))
+
+bhcbl <- ggplot(data = mink, aes(x = Category, y = BH.CBL))+
+  geom_boxplot(aes(fill=sex))+
+  scale_colour_manual(values=c("#f0f0f0", "#bdbdbd")) + 
+  scale_fill_manual(values=c("#f0f0f0", "#bdbdbd"))+
+  theme_classic2()+
+  theme(legend.position = "none")+
+  theme(plot.title = element_text(size = 23))+
+  theme(axis.text.y=element_text(size=15), axis.text.x = element_blank(), axis.title.y = element_text(size = 17))+
+  xlab("")+
+  ylab("BH/CBL")
+
+
+
+plot_grid(volcbl, bhcbl, bwcbl,
+          nrow = 3,  
+          align = "v",
+          axis = "lr",
+          labels = c("a", "b", "c"),
+          label_size = 15)
+```
+

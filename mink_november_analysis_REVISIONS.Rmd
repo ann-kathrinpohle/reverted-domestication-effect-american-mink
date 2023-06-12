@@ -26,18 +26,9 @@ mink <- read_delim("mink_november.csv",",", escape_double = FALSE, trim_ws = TRU
 ```
 
 
-```{r linear model volume}
-
-mink$Category <- factor(mink$Category, levels = c("wild", "farm", "feral")) 
-
-vol_cat <- lm(volcalc_cbl3 ~ sex*Category, data = mink)
-summary(vol_cat)
-emmeans(vol_cat, pairwise ~ sex*Category)
-
-```
-
 
 ```{r revised lm volume}
+mink$Category <- factor(mink$Category, levels = c("wild", "farm", "feral")) 
 vol_cat_rev <- lm(volcalc_cbl3 ~ sex+Category, data = mink)
 summary(vol_cat_rev)
 pairwise <- emmeans(vol_cat_rev, pairwise ~ sex+Category)
@@ -55,16 +46,6 @@ library(AICcmodavg)
 models <- list(vol_cat_rev, vol_cat_rev_null)
 model.names <- c("vol_cat_rev", "vol_cat_rev_null")
 aictab(cand.set = models, modnames = model.names)
-```
-
-Former Figure 2 is now Supplementary Figure S3
-
-
-
-```{r linear model braincase height}
-bh_cat <- lm(BH.CBL ~ sex*Category, data = mink)
-summary(bh_cat)
-emmeans(bh_cat, pairwise ~ sex*Category)
 ```
 
 
@@ -85,13 +66,6 @@ AIC(bh_cat_rev, bh_cat_rev_null)
 ```
 
 
-```{r linear model braincase width}
-bw_cat <- lm(BW.CBL ~ sex*Category, data = mink)
-summary(bw_cat)
-emmeans(bw_cat, pairwise ~ sex*Category)
-```
-
-
 ```{r revised lm bw}
 bw_cat_rev <- lm(BW.CBL ~ sex + Category, data = mink)
 summary(bw_cat_rev)
@@ -107,40 +81,6 @@ AIC(bw_cat_rev, bw_cat_rev_null)
 ```
 
 
-```{r figure one}
-ggplot(data = mink, aes(x=Category, y=volcalc_cbl3, color = sex))+
-  geom_violin(trim = FALSE)+
-  geom_point(position = position_jitterdodge(dodge.width = 0.9))+
-  geom_signif(#
-  aes(xmin = 1.0, xmax = 2.0, y_position = 0.007, annotations = "****", group = sex),
-  data = subset(mink, sex %in% "F"), manual = TRUE, tip_length = 0.01, vjust = 0.5, color = "#bdbdbd")+
-  geom_signif(#
-  aes(xmin = 2.0, xmax = 3.0, y_position = 0.006, annotations = "****", group = sex),
-  data = subset(mink, sex %in% "F"), manual = TRUE, tip_length = 0.01, vjust = 0.5, color = "#bdbdbd")+
-  geom_signif(#
-  aes(xmin = 1.0, xmax = 3.0, y_position = 0.0075, annotations = "*", group = sex),
-  data = subset(mink, sex %in% "F"), manual = TRUE, tip_length = 0.01, vjust = 0.5, color = "#bdbdbd")+
-  geom_signif(#male wild - feral
-  aes(xmin = 1.0, xmax = 2.0, y_position = 0.0065, annotations = "****", group = sex),
-  data = subset(mink, sex %in% "M"), manual = TRUE, tip_length = 0.01, vjust = 0.5, color = "#636363")+
-  geom_signif(#male feral - farm
-  aes(xmin = 2.0, xmax = 3.0, y_position = 0.0058, annotations = "****", group = sex),
-  data = subset(mink, sex %in% "M"), manual = TRUE, tip_length = 0.01, vjust = 0.5, color = "#636363")+
-  geom_signif(#male wild - feral
-  aes(xmin = 1.0, xmax = 3.0, y_position = 0.0075, annotations = "***", group = sex),
-  data = subset(mink, sex %in% "M"), manual = TRUE, tip_length = 0.01, vjust = 0.5, color = "#636363")+
-  theme_classic()+
-  scale_fill_manual(values=c("#bdbdbd", "#636363"))+
-  scale_colour_manual(values=c("#bdbdbd", "#636363"))+
-  theme(legend.position = "none")+
-  theme(axis.text.y=element_text(size=15), axis.text.x = element_text(size = 20), axis.title.y = element_text(size = 17))+
-  xlab("")+
-  ylab("Vol/CBL^3")+labs(x= expression(""), 
-                         y= expression("Vol/"*CBL^{3}))+
-  facet_wrap("sex", ncol = 2)
-```
-
-the following chunk has the code for figure one including revisions. the only difference are the asterisks which have changed due to p-value differences in results of the pairwise comparisons.
 ```{r revised figure one}
 ggplot(data = mink, aes(x=Category, y=volcalc_cbl3, color = sex))+
   geom_violin(trim = FALSE)+
@@ -174,27 +114,6 @@ ggplot(data = mink, aes(x=Category, y=volcalc_cbl3, color = sex))+
   facet_wrap("sex", ncol = 2)
 ```
 
-
-The values used for the following figure were manually extracted after running each model repeatedly with differing intercepts. The code for changing intercepts and extraction of coefficients and confidence intervals can be found in the file: different_intercept_same_models.Rmd
-These values were manually extracted (not including estimates from interactions) and stored in separate data frames, called "vol_models", "bh_models" and "bw_models". 
-```{r figure two}
-setwd("/Users/ankapohle/Desktop")
-vol_models <- read_delim("vol_models_REVISED.csv",",", escape_double = FALSE, trim_ws = TRUE, locale=locale(decimal_mark = "."))
-
-my_palette <- c("#67001f", "#d6604d", "#f4a582", "#92c5de", "#2166ac", "#053061")
-
-ggplot(vol_models[vol_models$...1 %in% c("wild M - wild F", "wild M - farm M", "wild M - feral M", "wild F - farm F", "wild F - feral F", "farm M - farm F", "feral M - feral F", "feral M - farm M", "feral F - farm F"),], aes(x=estimate, y = intercept, col = compared_with))+ 
-  geom_point(position=ggstance::position_dodgev(height=0.6))+
-  geom_linerange(position=ggstance::position_dodgev(height=0.6),aes(xmin=lower_Cl, xmax= upper_Cl))+
-  geom_vline(xintercept = 0)+
-  geom_text(aes(label = compared_with), size = 3, position=ggstance::position_dodgev(height=0.6), vjust = -0.7)+
-  scale_color_manual(values = my_palette)+
-  scale_x_continuous(breaks=c(-2,-1,0,1,2), limits = c(-2, 2))+ 
-  theme_classic()+
-  theme(legend.position = "none", axis.text.y=element_text(size=13), axis.text.x = element_text(size = 15), axis.title.x = element_text(size = 15),axis.title.y = element_text(size = 15))+
-  ylab("Intercept")+
-  xlab("Estimate")
-```
 
 #####Supplementary Material#####
 
@@ -342,30 +261,30 @@ Supplementary Tables S2, S3 and S4 were manually configured after manually calcu
 Supplementary Table S5 was configured using the below code. This code will compare all possible combinations. To simplify, we only kept and displayed comparisons of interest in our manuscript (E.g. Comparisons such as M feral - M wild were displayed while comparisons such as M feral - F wild were left out). To facilitate readability (larger estimate and CI values), we displayed a table that used values multiplied by 1000.
 
 ```{r Supplementary Table S5}
-vol_cat2 <- lm(volcbl3_big ~ sex*Category, data = mink)
-emmeans(vol_cat, pairwise ~ sex*Category)
+vol_cat2 <- lm(volcbl3_big ~ sex+Category, data = mink)
+emmeans(vol_cat, pairwise ~ sex+Category)
 ```
 
-To facilitate readability (larger estimate and CI values), we displayed a table that used values multiplied by 1000.
+
 ```{r Supplementary Table S6}
-bh_cat2 <- lm(bhcbl_big ~ sex*Category, data = mink)
+bh_cat2 <- lm(bhcbl_big ~ sex+Category, data = mink)
 tab_model(bh_cat2, digits = 2)
 ```
 
 See description for Supplementary Table S5. 
 ```{r Supplementary Table S7}
-emmeans(bh_cat2, pairwise ~ sex*Category)
+emmeans(bh_cat2, pairwise ~ sex+Category)
 ```
 
 To facilitate readability (larger estimate and CI values), we displayed a table that used values multiplied by 1000.
 ```{r Supplementary Table S8}
-bw_cat2 <- lm(bwcbl_big ~ sex*Category, data = mink)
+bw_cat2 <- lm(bwcbl_big ~ sex+Category, data = mink)
 tab_model(bw_cat2, digits = 2)
 ```
 
 See description for Supplementary Table S5.
 ```{r Supplementary Table S9}
-emmeans(bw_cat2, pairwise ~ sex*Category)
+emmeans(bw_cat2, pairwise ~ sex+Category)
 ```
 
 
@@ -482,8 +401,6 @@ ggplot(data = mink, aes(x=Category, y=BH.CBL, color = sex))+
 ```
 
 
-The values used for the following figure were manually extracted after running each model repeatedly with differing intercepts. The code for changing intercepts and extraction of coefficients and confidence intervals can be found in the file: different_intercept_same_models.Rmd
-These values were manually extracted (not including estimates from interactions) and stored in separate data frames (.cvs files), called "vol_models", "bh_models" and "bw_models". 
 
 ```{r Revised Supplementary Figure S5 }
 pairwise.bh <- emmeans(bh_cat_rev, pairwise ~ sex+Category)

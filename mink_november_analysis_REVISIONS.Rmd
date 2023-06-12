@@ -368,7 +368,7 @@ ggplot(pairwise.df[pairwise.df$contrast %in% c("F wild - F farm", "F wild - F fe
 
 
 
-```{r Supplementary Figure S4}
+```{r revised Supplementary Figure S4}
 ggplot(data = mink, aes(x=Category, y=BH.CBL, color = sex))+
   geom_violin(trim = FALSE)+
   geom_point(position = position_jitterdodge(dodge.width = 0.9))+
@@ -379,7 +379,7 @@ ggplot(data = mink, aes(x=Category, y=BH.CBL, color = sex))+
   aes(xmin = 2.0, xmax = 3.0, y_position = 0.380, annotations = "****", group = sex),
   data = subset(mink, sex %in% "F"), manual = TRUE, tip_length = 0.01, vjust = 0.5, color = "#bdbdbd")+
   geom_signif(# female wild- feral
-  aes(xmin = 1.0, xmax = 3.0, y_position = 0.390, annotations = "ns", group = sex),
+  aes(xmin = 1.0, xmax = 3.0, y_position = 0.390, annotations = "**", group = sex),
   data = subset(mink, sex %in% "F"), manual = TRUE, tip_length = 0.01, vjust = 0.0, color = "#bdbdbd")+
   geom_signif(#male wild - farm
   aes(xmin = 1.0, xmax = 2.0, y_position = 0.385, annotations = "****", group = sex),
@@ -388,7 +388,7 @@ ggplot(data = mink, aes(x=Category, y=BH.CBL, color = sex))+
   aes(xmin = 2.0, xmax = 3.0, y_position = 0.375, annotations = "****", group = sex),
   data = subset(mink, sex %in% "M"), manual = TRUE, tip_length = 0.01, vjust = 0.5, color = "#636363")+
   geom_signif(#male wild - feral
-  aes(xmin = 1.0, xmax = 3.0, y_position = 0.395, annotations = "****", group = sex),
+  aes(xmin = 1.0, xmax = 3.0, y_position = 0.395, annotations = "**", group = sex),
   data = subset(mink, sex %in% "M"), manual = TRUE, tip_length = 0.01, vjust = 0.5, color = "#636363")+
   theme_classic2()+
   scale_fill_manual(values=c("#bdbdbd", "#636363"))+
@@ -425,18 +425,18 @@ ggplot(pairwise.bh.df[pairwise.bh.df$contrast %in% c("F wild - F farm", "F wild 
 ```
 
 
-```{r Supplementary Figure S6}
+```{r revised Supplementary Figure S6}
 ggplot(data = minks_nov, aes(x=Category, y=BW.CBL, color = sex))+
   geom_violin(trim = FALSE)+
   geom_point(position = position_jitterdodge(dodge.width = 0.9))+
   geom_signif(# female wild - farm
-  aes(xmin = 1.0, xmax = 2.0, y_position = 0.490, annotations = "****", group = sex),
+  aes(xmin = 1.0, xmax = 2.0, y_position = 0.490, annotations = "**", group = sex),
   data = subset(minks_nov, sex %in% "F"), manual = TRUE, tip_length = 0.01, vjust = 0.5, color = "#bdbdbd")+
   geom_signif(# female feral - farm
   aes(xmin = 2.0, xmax = 3.0, y_position = 0.510, annotations = "****", group = sex),
   data = subset(minks_nov, sex %in% "F"), manual = TRUE, tip_length = 0.01, vjust = 0.5, color = "#bdbdbd")+
   geom_signif(# female wild- feral
-  aes(xmin = 1.0, xmax = 3.0, y_position = 0.515, annotations = "ns", group = sex),
+  aes(xmin = 1.0, xmax = 3.0, y_position = 0.515, annotations = "**", group = sex),
   data = subset(minks_nov, sex %in% "F"), manual = TRUE, tip_length = 0.01, vjust = 0.0, color = "#bdbdbd")+
   geom_signif(#male wild - farm
   aes(xmin = 1.0, xmax = 2.0, y_position = 0.505, annotations = "****", group = sex),
@@ -445,7 +445,7 @@ ggplot(data = minks_nov, aes(x=Category, y=BW.CBL, color = sex))+
   aes(xmin = 2.0, xmax = 3.0, y_position = 0.500, annotations = "****", group = sex),
   data = subset(minks_nov, sex %in% "M"), manual = TRUE, tip_length = 0.01, vjust = 0.5, color = "#636363")+
   geom_signif(#male wild - feral
-  aes(xmin = 1.0, xmax = 3.0, y_position = 0.513, annotations = "ns", group = sex),
+  aes(xmin = 1.0, xmax = 3.0, y_position = 0.513, annotations = "**", group = sex),
   data = subset(minks_nov, sex %in% "M"), manual = TRUE, tip_length = 0.01, vjust = 0.0, color = "#636363")+
   theme_classic2()+
   scale_fill_manual(values=c("#bdbdbd", "#636363"))+
